@@ -14,6 +14,8 @@ from sqlite3 import dbapi2 as sqlite3
 from contextlib import closing
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash
+from flask.ext.principal import Principal, Identity, identity_changed, identity_loaded
+
 
 # configuration
 DATABASE = '/tmp/flaskr.db'
@@ -26,6 +28,14 @@ PASSWORD = 'default'
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
+
+# initialize flask-principal
+principals = Principal(app)
+
+
+@identity_loaded.connect_via(app)
+def on_identity_loaded(sender, identity):
+    print '>' * 10, 'on_identity_loaded()'
 
 
 def connect_db():
@@ -81,6 +91,8 @@ def login():
         elif request.form['password'] != app.config['PASSWORD']:
             error = 'Invalid password'
         else:
+            identity_changed.send(app, identity=Identity(request.form['username']))
+
             session['logged_in'] = True
             flash('You were logged in')
             return redirect(url_for('show_entries'))
