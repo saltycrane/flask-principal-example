@@ -14,7 +14,9 @@ from sqlite3 import dbapi2 as sqlite3
 from contextlib import closing
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash
-from flask.ext.principal import Principal, Identity, identity_changed, identity_loaded
+from flask.ext.principal import (
+    Principal, Identity, identity_changed, identity_loaded, Need, Permission,
+    AnonymousIdentity)
 
 
 # configuration
@@ -36,6 +38,8 @@ principals = Principal(app)
 @identity_loaded.connect_via(app)
 def on_identity_loaded(sender, identity):
     print '>' * 10, 'on_identity_loaded()'
+    if identity.name == 'admin':
+        identity.provides.add(Need('my_method', 'my_value'))
 
 
 def connect_db():
@@ -66,9 +70,15 @@ def teardown_request(exception):
 
 @app.route('/')
 def show_entries():
+    my_permission = Permission(Need('my_method', 'my_value'))
+    if my_permission.can():
+        permitted = True
+    else:
+        permitted = False
+
     cur = g.db.execute('select title, text from entries order by id desc')
     entries = [dict(title=row[0], text=row[1]) for row in cur.fetchall()]
-    return render_template('show_entries.html', entries=entries)
+    return render_template('show_entries.html', entries=entries, permitted=permitted)
 
 
 @app.route('/add', methods=['POST'])
@@ -101,6 +111,8 @@ def login():
 
 @app.route('/logout')
 def logout():
+    identity_changed.send(app, identity=AnonymousIdentity())
+
     session.pop('logged_in', None)
     flash('You were logged out')
     return redirect(url_for('show_entries'))
