@@ -1,5 +1,18 @@
 # -*- coding: utf-8 -*-
 
+"""
+Flask-Principal notes:
+    - The app's login() view sends the identity_changed signal
+    - The identity_changed signal runs Principal._on_identity_changed()
+    - Principal._on_identity_changed() runs Principal.set_identity()
+    - Principal.set_identity() runs Principal._set_thread_identity()
+    - Principal._set_thread_identity() sends the identity_loaded signal
+    - The identity_loaded signal runs the function decorated by
+      @identity_loaded.connect or @identity_loaded_connect_via() (i.e.
+      on_identity_loaded())
+
+"""
+
 from __future__ import with_statement
 
 from flask import (
