@@ -1,4 +1,11 @@
 
                          / Flask-Principal example /
 
-http://pypi.python.org/pypi/Flask-Principal
+ - http://pypi.python.org/pypi/Flask-Principal
+ - http://stackoverflow.com/questions/7050137/flask-principal-tutorial-auth-authr
+
+To run:
+
+ - $ pip install -r requirements.txt
+ - $ python main.py
+ - Point browser at http://localhost:5000
